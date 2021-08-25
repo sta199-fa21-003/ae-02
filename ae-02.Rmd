@@ -1,123 +1,101 @@
 ---
-title: "Flint Water Crisis"
-author: "Your Name"
-date: "8/25/2021"
+title: "Bechdel Tsst"
+author: ""
+date: "August 25, 2021"
 output: 
-  html_document 
+  html_document: 
+    fig_height: 4
+    fig_width: 9
 ---
 
-## Introduction
+In this mini analysis we work with the data used in the 2014 FiveThirtyEight story titled ["The Dollar-And-Cents Case Against Hollywood’s Exclusion of Women"](https://fivethirtyeight.com/features/the-dollar-and-cents-case-against-hollywoods-exclusion-of-women/).
 
-The data set consists of 271 homes sampled with three water lead contaminant values at designated time points. The lead content is in parts per billion (ppb). Additionally, some location data is given about each home.
+## Data and packages
 
-## Packages
+We start with loading the packages we'll use.
 
-```{r load-packages, warning = FALSE, message=FALSE}
+```{r load-packages, message=FALSE}
+library(fivethirtyeight)
 library(tidyverse)
 ```
 
-## Data
+The dataset contains information on `r nrow(bechdel)` movies released between `r min(bechdel$year)` and `r max(bechdel$year)`. However we'll focus our analysis on movies released between 1990 and 2013.
 
-To get started, read in the `flint.csv` file using the function `read_csv`. First, use the Upload button under Files.
-
-```{r flint, warning = FALSE, message = FALSE}
-flint <- read_csv("data/flint.csv")
+```{r}
+bechdel90_13 <- bechdel %>% 
+  filter(between(year, 1990, 2013))
 ```
 
-In this file, there are five variables:
+There are ____ such movies. 
 
-- **id**: sample ID number
-- **zip**: ZIP code in Flint of the sample's location
-- **ward**: ward in Flint of the sample's location
-- **draw**: which time point the water was sampled from
-- **lead**: lead content in parts per billion
+The financial variables we'll focus on are the following:
 
-Let's preview the data with the `glimpse()` function:
+- `budget_2013`: Budget in 2013 inflation adjusted dollars
+- `domgross_2013`: Domestic (US) gross revenue in 2013 inflation adjusted dollars
+- `intgross_2013`: Total interational (i.e., worldwide including US) gross revenue in 2013 inflation adjusted dollars
 
-```{r glimpse-data, echo = TRUE}
-glimpse(flint)
-```
+And we'll also use the variables `binary` and `clean_test` for grouping.
 
 ## Analysis
 
-### Part 1
-
-Let’s see how many samples were taken from each zip code.
-
-```{r count-by-zip, echo = TRUE}
-flint %>%               # data
-  group_by(zip) %>%     # perform a grouping by zip code
-  count()               # count occurrences
-```
-
-Which ZIP code had the most samples drawn?
-
-### Part 2
-
-Next, let's look at the mean and median lead contaminant values for each zip code and draw combination. We have eight zip codes and samples taken at three times. How many combinations do we have?
-
-```{r mean-ppb-by-zip-draw, echo = TRUE}
-flint %>% 
-  group_by(zip, draw) %>% 
-  summarise(mean_pb = mean(lead))
-```
-
-```{r median-ppb-by-zip-draw, echo = TRUE}
-flint %>% 
-  group_by(zip, draw) %>% 
-  summarise(median_pb = median(lead))
-```
-
-How many rows are in each of two above data frames?
-
-### Part 3
-
-Modify the code below to compute the mean and median lead contaminant values for zip code 48503 at the first draw. What should you put in for `draw == "_____"`? Don’t forget to uncomment the second line of code.
-
-```{r, echo = TRUE}
-flint %>% 
-  # filter(zip == 48503, draw == "_____") %>% 
-  summarise(mean_pb = mean(lead),
-            median_pb = median(lead))
-```
-
-### Part 4
-
-Let’s make some plots, where we will focus on zip codes 48503, 48504, 48505, 48506, and 48507. We will restrict our attention to samples with lead values less than 1,000 ppb.
-
-```{r, echo = TRUE}
-flint_focus <- flint %>% 
-  filter(zip %in% 48503:48507, lead < 1000)
-```
-
-Below are side-by-side box plots for the three flushing times in each of the five zip codes we considered. Add `x` and `y` labels; add a title by inserting `title = "title_name"` inside the `labs()` function.
+Let's take a look at how median budget and gross revenue vary by whether the movie passed the Bechdel test.
 
 ```{r}
-ggplot(data = flint_focus, aes(x = factor(zip), y = lead)) +
-  geom_boxplot(aes(fill = factor(draw))) +
-  labs(x = "--------", y = "--------", fill = "Flushing time") +
-  scale_fill_discrete(breaks = c("first", "second", "third"),
-                      labels = c("0 (sec)", "45 (sec)", "120 (sec)")) +
-  coord_flip() +
-  theme_bw()
+bechdel90_13 %>%
+  group_by(binary) %>%
+  summarise(med_budget = median(budget_2013),
+            med_domgross = median(domgross_2013, na.rm = TRUE),
+            med_intgross = median(intgross_2013, na.rm = TRUE))
 ```
 
-Add labels for `x`, `y`, a `title`, and `subtitle` to the code below to update the corresponding plot.
+Next, let's take a look at how median budget and gross revenue vary by a more detailed indicator of the Bechdel test result (`ok` = passes test, `dubious`, `men` = women only talk about men, `notalk` = women don't talk to each other, `nowomen` = fewer than two women).
 
 ```{r}
-ggplot(data = flint_focus, aes(x = factor(zip), y = lead)) +
-  geom_boxplot(aes(fill = factor(draw))) + 
-  labs(x = "--------", y = "--------", fill = "Flushing time",
-       subtitle = "--------") +
-  scale_fill_discrete(breaks = c("first", "second", "third"),
-                      labels = c("0 (sec)", "45 (sec)", "120 (sec)")) +
-  coord_flip(ylim = c(0, 50)) +
-  theme_bw()
+bechdel90_13 %>%
+  # ____ %>%
+  summarise(med_budget = median(budget_2013),
+            med_domgross = median(domgross_2013, na.rm = TRUE),
+            med_intgross = median(intgross_2013, na.rm = TRUE))
 ```
 
-What is the difference between the two plots?
+In order to evaluate how return on investment varies among movies that pass and fail the Bechdel test, we'll  first create a new variable called `roi` as the ratio of the total international gross revenue to the budget.
 
-## References
+```{r}
+bechdel90_13 <- bechdel90_13 %>%
+  mutate(roi = intgross_2013 / budget_2013)
+```
 
-1. Langkjaer-Bain, R. (2017). The murky tale of Flint’s deceptive water data. Significance, 14: 16-21.
-2. Holtz, Y. (2018). Pimp my RMD: a few tips for R Markdown. Accessed at [https://holtzy.github.io/Pimp-my-rmd/](https://holtzy.github.io/Pimp-my-rmd/)
+Let's see which movies have the highest return on investment.
+
+```{r}
+bechdel90_13 %>%
+  arrange(desc(roi)) %>% 
+  select(title, clean_test, binary, roi, budget_2013, intgross_2013)
+```
+
+Below is a visualization of the return on investment by test result, however it's difficult to see the distributions due to a few extreme observations.
+
+```{r}
+ggplot(data = bechdel90_13, mapping = aes(x = clean_test, y = roi, color = binary)) +
+  geom_boxplot() +
+  labs(title = "Return on investment vs. Bechdel test result",
+       x = "Detailed Bechdel result",
+       y = "___",
+       color = "Binary Bechdel result")
+```
+
+Zooming in on the movies with `roi < 10` provides a better view of how the medians across the categories compare:
+
+```{r}
+ggplot(data = bechdel90_13, mapping = aes(x = clean_test, y = roi, color = binary)) +
+  geom_boxplot() +
+  ylim(0, 10) +
+  labs(title = "Return on investment vs. Bechdel test result",
+       subtitle = "___",
+       x = "Detailed Bechdel result",
+       y = "Return on investment",
+       color = "Binary Bechdel result")
+```
+
+
+- What are the advantages to each plot? What are the disadvantages to each plot?
