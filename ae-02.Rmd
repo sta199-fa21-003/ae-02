@@ -3,7 +3,7 @@ title: "Bechdel Tsst"
 author: "[YOUR NAME]"
 date: "[DATE]"
 output: 
-  html_document: 
+  pdf_document: 
     fig_height: 4
     fig_width: 9
 ---
